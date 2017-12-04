@@ -43,7 +43,9 @@ library(dplyr)
 # select only columns with retention time in range
 
   gen_subset_select_rt <- function(data, bound_lower, bound_upper){
-    data_subset <- select(data, num_range(bound_lower:bound_upper))
+    column_names <- colnames(data)
+    columns <- column_names >= bound_lower & column_names <= bound_upper
+    data_subset <- select(data, columns)
     return(data_subset)
 }
 
