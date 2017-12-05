@@ -1,58 +1,88 @@
 library(dplyr)
 
-# filter samples which have variable values which appear in each parameter - empty list includes all values
+# filter samples which have variable values which appear in each parameter - missing parameter includes all
 
-  gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch){
-    if(length(locations) == 0){
-      locations <- unique(select(data, where))
-    }
-    if(length(years) == 0){
-      years <- unique(select(data, year))
-    }
-    if(length(bodies) == 0){
-      bodies <- unique(select(data, body))
-    }
-    if(length(ages) == 0){
-      ages <- unique(select(data, age))
-    }
-    if(length(sexes) == 0){
-      sexes <- unique(select(data, sex))
-    }
-    if(length(nitrogen) == 0){
-      nitrogen <- unique(select(data, nitrogen_error))
-    }
-    if(length(mumpups) == 0){
-      mumpups <- unique(select(data, mumpup_pair))
-    }
-    if(length(pouch) == 0){
-      pouch <- unique(select(data, pouches))
-    }
-
-    data_subset <- filter(data, where %in% locations,
-                          year %in% years,
-                          body %in% bodies,
-                          age %in% ages,
-                          sex %in% sexes,
-                          nitrogen %in% nitrogen_error,
-                          mumpup_pair %in% mumpups,
-                          pouches %in% pouch)
-    return(data_subset)
+gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch){
+  if(missing(locations)){
+    locations <- unique(select(data, where))[,1]
   }
+  if(missing(years)){
+    years <- unique(select(data, year))[,1]
+  }
+  if(missing(bodies)){
+    bodies <- unique(select(data, body))[,1]
+  }
+  if(missing(ages)){
+    ages <- unique(select(data, age))[,1]
+  }
+  if(missing(sexes)){
+    sexes <- unique(select(data, sex))[,1]
+  }
+  if(missing(nitrogen)){
+    nitrogen <- unique(select(data, Nitrogen_error))[,1]
+  }
+  if(missing(mumpups)){
+    mumpups <- unique(select(data, mumpup_pair))[,1]
+  }
+  if(missing(pouch)){
+    pouch <- unique(select(data, pouches))[,1]
+  }
+  
+  data_subset <- filter(data, where %in% locations,
+                        year %in% years,
+                        body %in% bodies,
+                        age %in% ages,
+                        sex %in% sexes,
+                        nitrogen %in% Nitrogen_error,
+                        mumpup_pair %in% mumpups,
+                        pouches %in% pouch)
+  return(data_subset)
+}
+
+
+# extract abundance values
+
+extractAbundance <- function(data){
+  data_extract <- data.frame(data, check.names = F)
+  for(i in 26:length(data_extract)){
+    if(class(data_extract[,i])!="integer"){
+      for(j in 1:nrow(data)){
+        if(data_extract[j,i]!="0")
+          data_extract[j,i] <- convert(data_extract[j,i])
+      }
+    }
+  }
+  return(data_extract)
+}
+
+convert <- function (st) {
+  E<-"E"
+  value <-regexpr(E,st)[1]
+  first<-substr(st,value-3,value-3)
+  dec<-substr(st,value-1,value-1)
+  numzero<-substr(st,value+1,value+1)
+  return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
+}
+
 
 
 # select only columns with retention time in range
 
-  gen_subset_select_rt <- function(data, bound_lower, bound_upper){
-    column_names <- colnames(data)
-    columns <- column_names >= bound_lower & column_names <= bound_upper
-    data_subset <- select(data, columns)
-    return(data_subset)
+gen_subset_select_rt <- function(data, bound_lower, bound_upper){
+  data_retentions <- colnames(data[,26:length(data)])
+  column_names <- as.double(data_retentions)
+  columns <- (column_names >= bound_lower) & (column_names <= bound_upper)
+  data_retentions_subset <- data_retentions[columns]
+  data_subset <- merge(data[,1:25], data_retentions)
+  return(data_subset)
 }
 
 
 # select only numerical columns for analysis
 
-  gen_subset_numerical <- function(data){
-    data_subset <- select_if(data, is.numeric)
-    return(data_subset)
-  }
+gen_subset_numerical <- function(data){
+  data_subset <- select_if(data, is.numeric)
+  return(data_subset)
+}
+
+
