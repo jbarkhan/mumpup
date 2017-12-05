@@ -1,3 +1,8 @@
+#############################################
+##### functions for mumpup data analysis#####
+#############################################
+
+
 library(dplyr)
 
 # filter samples which have variable values which appear in each parameter - missing parameter includes all
@@ -68,7 +73,7 @@ convert <- function (st) {
 # zero abundances for compounds which only occur in a single observation
 
 gen_zero_singles <- function(data){
-  data_zeros <- data[,26:length(data)]
+  data_zeros <- cbind(data[,26:length(data)])
   for(i in 1:length(data_zeros)){
     if(sum(data_zeros[,i] != 0) == 1)
       data_zeros[,i][data_zeros[,i] > 0] <- 0
@@ -78,10 +83,21 @@ gen_zero_singles <- function(data){
 }
 
 
+# transform data to relative abundance
+
+gen_relative_abundance <- function(data){
+  data_relative <- cbind(data[,26:length(data)])
+  sums <- apply(data_relative, 1, sum)
+  data_relative <- sweep(data_relative, 1, sums, "/")
+  data_relative <- cbind(data[,1:25], data_relative)
+  return(data_relative)
+}
+
+
 # select only columns with retention time in range
 
 gen_subset_select_rt <- function(data, bound_lower, bound_upper){
-  data_retentions <- data[,26:length(data)]
+  data_retentions <- cbind(data[,26:length(data)])
   column_names <- as.double(colnames(data_retentions))
   columns <- (column_names >= bound_lower) & (column_names <= bound_upper)
   data_retentions_subset <- data_retentions[columns]
