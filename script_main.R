@@ -69,11 +69,11 @@ convert <- function (st) {
 # select only columns with retention time in range
 
 gen_subset_select_rt <- function(data, bound_lower, bound_upper){
-  data_retentions <- colnames(data[,26:length(data)])
-  column_names <- as.double(data_retentions)
+  data_retentions <- data[,26:length(data)]
+  column_names <- as.double(colnames(data_retentions))
   columns <- (column_names >= bound_lower) & (column_names <= bound_upper)
   data_retentions_subset <- data_retentions[columns]
-  data_subset <- merge(data[,1:25], data_retentions)
+  data_subset <- cbind(data[,1:25], data_retentions_subset)
   return(data_subset)
 }
 
