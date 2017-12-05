@@ -65,6 +65,17 @@ convert <- function (st) {
 }
 
 
+# zero abundances for compounds which only occur in a single observation
+
+gen_zero_singles <- function(data){
+  data_zeros <- data.frame(data)[,25:length(data)]
+  for(i in 1:length(data_zeros){
+    if(sum(data_zeros[,i]) == 1)
+      data_zeros[,i][data_zeros[,i] > 0] <- 0
+  }
+  return(data_zeros)
+}
+
 
 # select only columns with retention time in range
 
