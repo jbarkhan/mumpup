@@ -89,8 +89,6 @@ remove_control <- function(data,w,...){
   return(data)
 }
 
-
-
 # zero abundances for compounds which only occur in a single observation
 
 gen_zero_singles <- function(data){
