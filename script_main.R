@@ -60,6 +60,7 @@ extractAbundance <- function(data){
       }
     }
   }
+  data_extract[,26:length(data_extract)]<- sapply(data_extract[,26:length(data_extract)], as.numeric)
   return(data_extract)
 }
 
