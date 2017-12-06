@@ -1,9 +1,12 @@
 #############################################
-##### functions for mumpup data analysis#####
+##### functions for mumpup data analysis ####
 #############################################
 
 
 library(dplyr)
+library(vegan)
+
+##### PREPROCCESSING #####
 
 # filter samples which have variable values which appear in each parameter - missing parameter includes all
 
@@ -106,11 +109,40 @@ gen_subset_select_rt <- function(data, bound_lower, bound_upper){
 }
 
 
+
+##### ANALYSIS #####
+
+# get numerical columns and perform wisconsin + sqrt transforms
+
+gen_prepared_data <- function(data){
+  data_prepared <- cbind(data)
+  data_prepared <- gen_wisconsin_sqrt(gen_subset_numerical(data_prepared))
+  return(data_prepared)
+}
+
+# get numerical columns and perform metaMDS transform
+
+gen_metaMDS <- function(data){
+  data_transformed <- cbind(data)
+  data_transformed <- metaMDS(gen_subset_numerical(data_transformed))
+  return(data_transformed)
+}
+
 # select only numerical columns for analysis
 
 gen_subset_numerical <- function(data){
   data_subset <- select_if(data, is.numeric)
   return(data_subset)
 }
+
+# Wisconsin transform of sqare root of data
+
+gen_wisconsin_sqrt <- function(data){
+  data_transformed <- cbind(data)
+  data_transformed <- wisconsin(sqrt(data_transformed))
+  return(data_transformed)
+}
+
+
 
 
