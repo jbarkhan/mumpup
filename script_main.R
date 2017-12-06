@@ -60,6 +60,7 @@ extractAbundance <- function(data){
       }
     }
   }
+  data_extract[,26:length(data_extract)]<- sapply(data_extract[,26:length(data_extract)], as.numeric)
   return(data_extract)
 }
 
@@ -116,7 +117,9 @@ gen_subset_select_rt <- function(data, bound_lower, bound_upper){
 
 gen_prepared_data <- function(data){
   data_prepared <- cbind(data)
-  data_prepared <- gen_wisconsin_sqrt(gen_subset_numerical(data_prepared))
+  data_prepared <- data_prepared %>% 
+    gen_wisconsin_sqrt() %>%
+    gen_subset_numerical()
   return(data_prepared)
 }
 
@@ -142,7 +145,4 @@ gen_wisconsin_sqrt <- function(data){
   data_transformed <- wisconsin(sqrt(data_transformed))
   return(data_transformed)
 }
-
-
-
 
