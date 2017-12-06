@@ -73,6 +73,23 @@ convert <- function (st) {
   return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
 }
 
+#remove control samples from a subset (flexible with multiple inputs) 
+
+remove_control <- function(data,w,...){
+  temp<-data[,1]
+  input<-c(w,...)
+  for(i in 1:length(input)){
+    if(input[i]!=""){
+      if(match(input[i], temp, nomatch=0)!="0"){
+        index<- match(input[i], temp, nomatch=0)
+        data <- data[-index,]
+      }
+    } 
+  }
+  return(data)
+}
+
+
 
 # zero abundances for compounds which only occur in a single observation
 
@@ -143,6 +160,11 @@ gen_wisconsin_sqrt <- function(data){
   data_transformed <- wisconsin(sqrt(data_transformed))
   return(data_transformed)
 }
+
+
+
+
+
 
 
 
