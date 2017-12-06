@@ -145,4 +145,3 @@ gen_wisconsin_sqrt <- function(data){
   data_transformed <- wisconsin(sqrt(data_transformed))
   return(data_transformed)
 }
-
