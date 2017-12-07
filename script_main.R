@@ -169,42 +169,42 @@ filename_Safe <- function(string) {
 }
 
 export_file <- function(data,subset){
-  if(all.equal(data$where,subset$where)){
+  if(isTRUE(all.equal(data$where,subset$where))){
     where_string <- "ALL"
   } else{
     where_string<-filename_Safe(toString(levels(factor(subset$where))))
   }
-  if(all.equal(data$year,subset$year)){
+  if(isTRUE(all.equal(data$year,subset$year))){
     year_string <- "ALL"
   } else{
     year_string<-filename_Safe(toString(levels(factor(subset$year))))
   }
-  if(all.equal(data$body,subset$body)){
+  if(isTRUE(all.equal(data$body,subset$body))){
     body_string <- "ALL"
   } else{
     body_string<-filename_Safe(toString(levels(factor(subset$body))))
   }
-  if(all.equal(data$age,subset$age)){
+  if(isTRUE(all.equal(data$age,subset$age))){
     age_string <- "ALL"
   } else{
     age_string<-filename_Safe(toString(levels(factor(subset$age))))
   }
-  if(all.equal(data$sex,subset$sex)){
+  if(isTRUE(all.equal(data$sex,subset$sex))){
     sex_string <- "ALL"
   } else{
     sex_string<-filename_Safe(toString(levels(factor(subset$sex))))
   }
-  if(all.equal(data$mumpup_pair,subset$mumpup_pair)){
+  if(isTRUE(all.equal(data$mumpup_pair,subset$mumpup_pair))){
     mumpup_pair_string <- "ALL"
   } else{
     mumpup_pair_string<-filename_Safe(toString(levels(factor(subset$mumpup_pair))))
   }
-  if(all.equal(data$nitrogen_error,subset$nitrogen_error)){
+  if(isTRUE(all.equal(data$nitrogen_error,subset$nitrogen_error))){
     Nitrogen_error_string <- "ALL"
   } else{
     Nitrogen_error_string<-filename_Safe(toString(levels(factor(subset$Nitrogen_error))))
   }
-  if(all.equal(data$pouches,subset$pouches)){
+  if(isTRUE(all.equal(data$pouches,subset$pouches))){
     pouches_string <- "ALL"
   } else{
     pouches_string<-filename_Safe(toString(levels(factor(subset$pouches))))
@@ -217,6 +217,7 @@ export_file <- function(data,subset){
   mystring<- paste("Where",where_string,"Year",year_string,"Body",body_string,"Age",age_string,"Sex",sex_string,"Nitrogen_error",Nitrogen_error_string,"Mumpup_pair",mumpup_pair_string,"Pouches",pouches_string, "Control", input_string, "Time", mintime_string, maxtime_string)
   write.csv(subset, paste0(filename_Safe(mystring),".csv"),row.names=F)
 }
+
 
 
 
