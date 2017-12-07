@@ -92,18 +92,39 @@ gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitro
 #remove control samples from a subset (flexible with multiple inputs) 
 
 remove_control <- function(data_control, data_non_control, w,...){
-  temp<-data[,1]
   input<<-c(w,...)
   for(i in 1:length(input)){
-    if(input[i]!=""){
-      if(match(input[i], temp, nomatch=0)!="0"){
-        index<- match(input[i], temp, nomatch=0)
-        data <- data[-index,]
+    for(a in 1:nrow(data_control)){
+      if(match(input[i], data_control[[i]], nomatch=0)!="0"){
+        index<- match(input[i],control[[1]])
+        yearofindex<-data_control[index,3]
+        locationofindex<-data_control[index,2]
+        
+        vector<-logical(length=length(data_control)-25)
+        for(j in 26:length(data_control)){
+          if(data_control[index,j]!=0){
+            vector[j-25] <- TRUE
+          } else{
+            vector[j-25] <- FALSE
+          }
+        }
+        
+        for(k in 26:length(data_non_control)){
+          if(isTRUE(vector[k-25])){
+            for(m in 1:nrow(data_non_control)){
+              if(data_non_control[m,2]==locationofindex & data_non_control[m,3]==yearofindex){
+                data_non_control[m,k]<-0
+              }
+            }
+          }
+        }
       }
-    } 
-  }
-  return(data)
+    }
+    
+  } 
+  return(data_non_control)
 }
+
 
 # zero abundances for compounds which only occur in a single observation
 
@@ -148,42 +169,42 @@ filename_Safe <- function(string) {
 }
 
 export_file <- function(data,subset){
-  if(all.equal(data$where,subset$where)){
+  if(isTRUE(all.equal(data$where,subset$where))){
     where_string <- "ALL"
   } else{
     where_string<-filename_Safe(toString(levels(factor(subset$where))))
   }
-  if(all.equal(data$year,subset$year)){
+  if(isTRUE(all.equal(data$year,subset$year))){
     year_string <- "ALL"
   } else{
     year_string<-filename_Safe(toString(levels(factor(subset$year))))
   }
-  if(all.equal(data$body,subset$body)){
+  if(isTRUE(all.equal(data$body,subset$body))){
     body_string <- "ALL"
   } else{
     body_string<-filename_Safe(toString(levels(factor(subset$body))))
   }
-  if(all.equal(data$age,subset$age)){
+  if(isTRUE(all.equal(data$age,subset$age))){
     age_string <- "ALL"
   } else{
     age_string<-filename_Safe(toString(levels(factor(subset$age))))
   }
-  if(all.equal(data$sex,subset$sex)){
+  if(isTRUE(all.equal(data$sex,subset$sex))){
     sex_string <- "ALL"
   } else{
     sex_string<-filename_Safe(toString(levels(factor(subset$sex))))
   }
-  if(all.equal(data$mumpup_pair,subset$mumpup_pair)){
+  if(isTRUE(all.equal(data$mumpup_pair,subset$mumpup_pair))){
     mumpup_pair_string <- "ALL"
   } else{
     mumpup_pair_string<-filename_Safe(toString(levels(factor(subset$mumpup_pair))))
   }
-  if(all.equal(data$nitrogen_error,subset$nitrogen_error)){
+  if(isTRUE(all.equal(data$nitrogen_error,subset$nitrogen_error))){
     Nitrogen_error_string <- "ALL"
   } else{
     Nitrogen_error_string<-filename_Safe(toString(levels(factor(subset$Nitrogen_error))))
   }
-  if(all.equal(data$pouches,subset$pouches)){
+  if(isTRUE(all.equal(data$pouches,subset$pouches))){
     pouches_string <- "ALL"
   } else{
     pouches_string<-filename_Safe(toString(levels(factor(subset$pouches))))
@@ -196,6 +217,7 @@ export_file <- function(data,subset){
   mystring<- paste("Where",where_string,"Year",year_string,"Body",body_string,"Age",age_string,"Sex",sex_string,"Nitrogen_error",Nitrogen_error_string,"Mumpup_pair",mumpup_pair_string,"Pouches",pouches_string, "Control", input_string, "Time", mintime_string, maxtime_string)
   write.csv(subset, paste0(filename_Safe(mystring),".csv"),row.names=F)
 }
+
 
 
 
