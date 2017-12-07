@@ -46,8 +46,7 @@ extractAbundance <- function(data){
 }
 
 convert <- function (st) {
-  E<-"E"
-  value <-regexpr(E,st)[1]
+  value <-regexpr("E",st)[1]
   first<-substr(st,value-3,value-3)
   dec<-substr(st,value-1,value-1)
   numzero<-substr(st,value+1,value+1)
@@ -57,43 +56,59 @@ convert <- function (st) {
 # get control samples
 
 get_control <- function(data){
-  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])) & (is.na(data[,7])))
+  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])))
   return(controls)
 }
 
 # get non-control samples
 
 get_non_control <- function(data){
-  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])) | (!is.na(data[,7])))
+  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])))
 }
 
 
 # filter samples which have variable values which appear in each parameter - missing parameter includes all
 
-gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch){
+gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes, nitrogen, mumpups, pouch){
   if(missing(locations)){
     locations <- unique(select(data, where))[,1]
+  } else if(all(match(locations,levels(factor(data$where)), nomatch=0))==FALSE){
+    return("ERROR")
   }
   if(missing(years)){
     years <- unique(select(data, year))[,1]
+  } else if(all(match(years,levels(factor(data$year)), nomatch=0))==FALSE){
+    return("ERROR")
   }
   if(missing(bodies)){
     bodies <- unique(select(data, body))[,1]
+  } else if(all(match(bodies,levels(factor(data$body)), nomatch=0))==FALSE){
+    return("ERROR")
   }
   if(missing(ages)){
     ages <- unique(select(data, age))[,1]
+  } else if(all(match(ages,levels(factor(data$age)), nomatch=0))==FALSE){
+    return("ERROR")
   }
   if(missing(sexes)){
     sexes <- unique(select(data, sex))[,1]
+  } else if(match(sexes,levels(factor(data$sex)), nomatch=0)==0){
+    return("ERROR")
   }
   if(missing(nitrogen)){
     nitrogen <- unique(select(data, Nitrogen_error))[,1]
+  } else if(match(nitrogen,levels(factor(data$Nitrogen_error)), nomatch=0)==0){
+    return("ERROR")
   }
   if(missing(mumpups)){
     mumpups <- unique(select(data, mumpup_pair))[,1]
+  } else if(match(mumpups,levels(factor(data$mumpup_pair)), nomatch=0)==0){
+    return("ERROR")
   }
   if(missing(pouch)){
     pouch <- unique(select(data, pouches))[,1]
+  } else if(match(pouch,levels(factor(data$pouches)), nomatch=0)==0){
+    return("ERROR")
   }
   
   data_subset <- filter(data, where %in% locations,
@@ -112,37 +127,31 @@ gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitro
 
 #remove control samples from a subset (flexible with multiple inputs) 
 
-remove_control <- function(data_control, data_non_control, w,...){
-  input<<-c(w,...)
+remove_control <- function(data_control, data_non_control, w, ...){
+  input<<-c(w,...) #create vector of names of control sample that user wishes to remove
   for(i in 1:length(input)){
-    for(a in 1:nrow(data_control)){
-      if(match(input[i], data_control[[i]], nomatch=0)!="0"){
-        index<- match(input[i],control[[1]])
-        yearofindex<-data_control[index,3]
-        locationofindex<-data_control[index,2]
-        
-        vector<-logical(length=length(data_control)-25)
-        for(j in 26:length(data_control)){
-          if(data_control[index,j]!=0){
-            vector[j-25] <- TRUE
-          } else{
-            vector[j-25] <- FALSE
-          }
-        }
-        
-        for(k in 26:length(data_non_control)){
-          if(isTRUE(vector[k-25])){
+    found <- FALSE
+    for(j in 1:nrow(data_control) && found==FALSE){
+      if(match(input[i], data_control[[j]], nomatch=0)!="0"){
+        index<- match(input[i],control[[1]]) #index of the row related to the input name
+        yearofindex<-data_control[index,3] 
+        locationofindex<-data_control[index,2] 
+        for(k in 26:length(data_control)){
+          if(data_control[index,k]!=0){
             for(m in 1:nrow(data_non_control)){
               if(data_non_control[m,2]==locationofindex & data_non_control[m,3]==yearofindex){
-                data_non_control[m,k]<-0
+                data_non_control[m,k]<-0 
               }
-            }
-          }
-        }
+            }#end m loop
+          } 
+        }#end k loop
+        found<- TRUE #set to true when the name from the input has been found in the"sample names(control)"
       }
+    }#end j loop
+    if(found==FALSE){
+      return("ERROR")
     }
-    
-  } 
+  }#end i loop
   return(data_non_control)
 }
 
