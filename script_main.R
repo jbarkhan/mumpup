@@ -93,7 +93,7 @@ gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitro
 
 remove_control <- function(data_control, data_non_control, w,...){
   temp<-data[,1]
-  input<-c(w,...)
+  input<<-c(w,...)
   for(i in 1:length(input)){
     if(input[i]!=""){
       if(match(input[i], temp, nomatch=0)!="0"){
@@ -135,9 +135,66 @@ gen_subset_select_rt <- function(data, bound_lower, bound_upper){
   data_retentions <- cbind(data[,26:length(data)])
   column_names <- as.double(colnames(data_retentions))
   columns <- (column_names >= bound_lower) & (column_names <= bound_upper)
-  data_retentions_subset <- data_retentions[columns]
+  data_retentions_subset <<- data_retentions[columns]
   data_subset <- cbind(data[,1:25], data_retentions_subset)
   return(data_subset)
+}
+
+# Creates csv file
+filename_Safe <- function(string) {
+  safeString <- gsub("[^[:alnum:]]", "_", string)
+  safeString <- gsub("_+", "_", safeString)
+  safeString
+}
+
+export_file <- function(data,subset){
+  if(all.equal(data$where,subset$where)){
+    where_string <- "ALL"
+  } else{
+    where_string<-filename_Safe(toString(levels(factor(subset$where))))
+  }
+  if(all.equal(data$year,subset$year)){
+    year_string <- "ALL"
+  } else{
+    year_string<-filename_Safe(toString(levels(factor(subset$year))))
+  }
+  if(all.equal(data$body,subset$body)){
+    body_string <- "ALL"
+  } else{
+    body_string<-filename_Safe(toString(levels(factor(subset$body))))
+  }
+  if(all.equal(data$age,subset$age)){
+    age_string <- "ALL"
+  } else{
+    age_string<-filename_Safe(toString(levels(factor(subset$age))))
+  }
+  if(all.equal(data$sex,subset$sex)){
+    sex_string <- "ALL"
+  } else{
+    sex_string<-filename_Safe(toString(levels(factor(subset$sex))))
+  }
+  if(all.equal(data$mumpup_pair,subset$mumpup_pair)){
+    mumpup_pair_string <- "ALL"
+  } else{
+    mumpup_pair_string<-filename_Safe(toString(levels(factor(subset$mumpup_pair))))
+  }
+  if(all.equal(data$nitrogen_error,subset$nitrogen_error)){
+    Nitrogen_error_string <- "ALL"
+  } else{
+    Nitrogen_error_string<-filename_Safe(toString(levels(factor(subset$Nitrogen_error))))
+  }
+  if(all.equal(data$pouches,subset$pouches)){
+    pouches_string <- "ALL"
+  } else{
+    pouches_string<-filename_Safe(toString(levels(factor(subset$pouches))))
+  }
+  
+  input_string<-filename_Safe(paste(input))
+  mintime_string<-filename_Safe(names(data_retentions_subset)[1])
+  maxtime_string<-filename_Safe(toString(names(data_retentions_subset)[length(data_retentions_subset)]))
+  
+  mystring<- paste("Where",where_string,"Year",year_string,"Body",body_string,"Age",age_string,"Sex",sex_string,"Nitrogen_error",Nitrogen_error_string,"Mumpup_pair",mumpup_pair_string,"Pouches",pouches_string, "Control", input_string, "Time", mintime_string, maxtime_string)
+  write.csv(subset, paste0(filename_Safe(mystring),".csv"),row.names=F)
 }
 
 
