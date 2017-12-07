@@ -23,6 +23,10 @@ preprocess <- function(data, locations, years, bodies, ages, sexes, nitrogen, mu
     gen_relative_abundance() %>%
     gen_subset_select_rt()
   # write data_processed to csv with appropriate name generated from parameters
+  
+  
+  
+  return(data_processed)
 }
 
 # extract abundance values
