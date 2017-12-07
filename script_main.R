@@ -222,4 +222,13 @@ gen_wisconsin_sqrt <- function(data){
   return(data_transformed)
 }
 
-
+# execute adonis
+ 
+ execute_adonis <- function(data_transformed, data, field_1, field_2){
+   if(missing(field_2)){
+     temp <- adonis(data_transformed ~ data $ field_1)
+     return(temp)
+   }
+   temp <- adonis(data_transformed ~ data $ field_1 * data $ field_2)
+   return(temp)
+ } 
