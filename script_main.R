@@ -240,10 +240,14 @@ gen_wisconsin_sqrt <- function(data){
 
 # execute adonis
  
- execute_adonis <- function(data_transformed, data, field_1){
-   dt <- cbind(data_transformed)
-   d <- cbind(data)
-   s <- field_1
-   ad <- adonis(dt~d$s)
+ execute_adonis <- function(data_transformed, data, field_1, field_2) {
+   if(missing(field_2)){
+     i <- grep(field_1, colnames(data))
+     ad <- adonis(data_transformed ~ data[,i])
+     return(ad)
+   }
+   i <- grep(field_1, colnames(data))
+   j <- grep(field_2, colnames(data))
+   ad <- adonis(data_transformed ~ data[,i] * data[,j])
    return(ad)
  } 
