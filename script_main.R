@@ -92,18 +92,39 @@ gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitro
 #remove control samples from a subset (flexible with multiple inputs) 
 
 remove_control <- function(data_control, data_non_control, w,...){
-  temp<-data[,1]
   input<<-c(w,...)
   for(i in 1:length(input)){
-    if(input[i]!=""){
-      if(match(input[i], temp, nomatch=0)!="0"){
-        index<- match(input[i], temp, nomatch=0)
-        data <- data[-index,]
+    for(a in 1:nrow(data_control)){
+      if(match(input[i], data_control[[i]], nomatch=0)!="0"){
+        index<- match(input[i],control[[1]])
+        yearofindex<-data_control[index,3]
+        locationofindex<-data_control[index,2]
+        
+        vector<-logical(length=length(data_control)-25)
+        for(j in 26:length(data_control)){
+          if(data_control[index,j]!=0){
+            vector[j-25] <- TRUE
+          } else{
+            vector[j-25] <- FALSE
+          }
+        }
+        
+        for(k in 26:length(data_non_control)){
+          if(isTRUE(vector[k-25])){
+            for(m in 1:nrow(data_non_control)){
+              if(data_non_control[m,2]==locationofindex & data_non_control[m,3]==yearofindex){
+                data_non_control[m,k]<-0
+              }
+            }
+          }
+        }
       }
-    } 
-  }
-  return(data)
+    }
+    
+  } 
+  return(data_non_control)
 }
+
 
 # zero abundances for compounds which only occur in a single observation
 
