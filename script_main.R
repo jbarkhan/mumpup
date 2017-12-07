@@ -8,6 +8,45 @@ library(vegan)
 
 ##### PREPROCCESSING #####
 
+# extract abundance values
+
+extractAbundance <- function(data){
+  data_extract <- data.frame(data, check.names = F)
+  for(i in 26:length(data_extract)){
+    if(class(data_extract[,i])!="integer"){
+      for(j in 1:nrow(data)){
+        if(data_extract[j,i]!="0")
+          data_extract[j,i] <- convert(data_extract[j,i])
+      }
+    }
+  }
+  data_extract[,26:length(data_extract)]<- sapply(data_extract[,26:length(data_extract)], as.numeric)
+  return(data_extract)
+}
+
+convert <- function (st) {
+  E<-"E"
+  value <-regexpr(E,st)[1]
+  first<-substr(st,value-3,value-3)
+  dec<-substr(st,value-1,value-1)
+  numzero<-substr(st,value+1,value+1)
+  return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
+}
+
+# get control samples
+
+get_control <- function(data){
+  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])) & (is.na(data[,7])))
+  return(controls)
+}
+
+# get non-control samples
+
+get_non_control <- function(data){
+  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])) | (!is.na(data[,7])))
+}
+
+
 # filter samples which have variable values which appear in each parameter - missing parameter includes all
 
 gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch){
@@ -48,34 +87,11 @@ gen_subset_filter <- function(data, locations, years, bodies, ages, sexes, nitro
 }
 
 
-# extract abundance values
 
-extractAbundance <- function(data){
-  data_extract <- data.frame(data, check.names = F)
-  for(i in 26:length(data_extract)){
-    if(class(data_extract[,i])!="integer"){
-      for(j in 1:nrow(data)){
-        if(data_extract[j,i]!="0")
-          data_extract[j,i] <- convert(data_extract[j,i])
-      }
-    }
-  }
-  data_extract[,26:length(data_extract)]<- sapply(data_extract[,26:length(data_extract)], as.numeric)
-  return(data_extract)
-}
-
-convert <- function (st) {
-  E<-"E"
-  value <-regexpr(E,st)[1]
-  first<-substr(st,value-3,value-3)
-  dec<-substr(st,value-1,value-1)
-  numzero<-substr(st,value+1,value+1)
-  return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
-}
 
 #remove control samples from a subset (flexible with multiple inputs) 
 
-remove_control <- function(data,w,...){
+remove_control <- function(data_control, data_non_control, w,...){
   temp<-data[,1]
   input<-c(w,...)
   for(i in 1:length(input)){
@@ -133,8 +149,8 @@ gen_subset_select_rt <- function(data, bound_lower, bound_upper){
 gen_prepared_data <- function(data){
   data_prepared <- cbind(data)
   data_prepared <- data_prepared %>% 
-    gen_wisconsin_sqrt() %>%
-    gen_subset_numerical()
+    gen_subset_numerical() %>%
+    gen_wisconsin_sqrt()
   return(data_prepared)
 }
 
@@ -151,7 +167,7 @@ gen_metaMDS <- function(data){
 # select only numerical columns for analysis
 
 gen_subset_numerical <- function(data){
-  data_subset <- select_if(data, is.numeric)
+  data_subset <- data[,26:length(data)]
   return(data_subset)
 }
 
@@ -167,11 +183,10 @@ gen_wisconsin_sqrt <- function(data){
 
 # execute adonis
  
- execute_adonis <- function(data_transformed, data, field_1, field_2){
-   if(missing(field_2)){
-     temp <- adonis(data_transformed ~ data $ field_1)
-     return(temp)
-   }
-   temp <- adonis(data_transformed ~ data $ field_1 * data $ field_2)
-   return(temp)
+ execute_adonis <- function(data_transformed, data, field_1){
+   dt <- cbind(data_transformed)
+   d <- cbind(data)
+   s <- field_1
+   ad <- adonis(dt~d$s)
+   return(ad)
  } 
