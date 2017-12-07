@@ -8,6 +8,23 @@ library(vegan)
 
 ##### PREPROCCESSING #####
 
+# batch preprocess function
+
+preprocess <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch,
+                       lower_bound, upper_bound, w,...){
+  data_processed <- data_processed %>%
+    extractAbundance() %>%
+    gen_subset_filter(locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch)
+  data_processed_nc <- get_non_control(data_processed)
+  data_processed_c <- get_control(data_processed)
+  data_processed <- remove_control(data_processed_c, data_processed_nc, w,...)
+  data_processed <- data_processed %>%
+    gen_zero_singles() %>%
+    gen_relative_abundance() %>%
+    gen_subset_select_rt()
+  # write data_processed to csv with appropriate name generated from parameters
+}
+
 # extract abundance values
 
 extractAbundance <- function(data){
@@ -272,4 +289,39 @@ gen_wisconsin_sqrt <- function(data){
    j <- grep(field_2, colnames(data))
    ad <- adonis(data_transformed ~ data[,i] * data[,j])
    return(ad)
+ } 
+ 
+ 
+ # pairwise adonis function
+ 
+ pairwise.adonis <- function(x,factors, sim.function = 'vegdist', sim.method = 'bray', p.adjust.m ='holm')
+ {
+   co = combn(unique(as.character(factors)),2)
+   pairs = c()
+   F.Model =c()
+   R2 = c()
+   p.value = c()
+   
+   
+   for(elem in 1:ncol(co)){
+     if(sim.function == 'daisy'){
+       library(cluster); x1 = daisy(x[factors %in% c(co[1,elem],co[2,elem]),],metric=sim.method)
+     } else{x1 = vegdist(x[factors %in% c(co[1,elem],co[2,elem]),],method=sim.method)}
+     
+     ad = adonis(x1 ~ factors[factors %in% c(co[1,elem],co[2,elem])] );
+     pairs = c(pairs,paste(co[1,elem],'vs',co[2,elem]));
+     F.Model =c(F.Model,ad$aov.tab[1,4]);
+     R2 = c(R2,ad$aov.tab[1,5]);
+     p.value = c(p.value,ad$aov.tab[1,6])
+   }
+   p.adjusted = p.adjust(p.value,method=p.adjust.m)
+   sig = c(rep('',length(p.adjusted)))
+   sig[p.adjusted <= 0.05] <-'.'
+   sig[p.adjusted <= 0.01] <-'*'
+   sig[p.adjusted <= 0.001] <-'**'
+   sig[p.adjusted <= 0.0001] <-'***'
+   
+   pairw.res = data.frame(pairs,F.Model,R2,p.value,p.adjusted,sig)
+   print("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
+   return(pairw.res)
  } 
