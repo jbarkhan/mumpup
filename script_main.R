@@ -342,8 +342,6 @@ gen_wisconsin_sqrt <- function(data){
  
   gen_plot <- function(data_mds, data, w, ...){
     input<<-c(w,...)
-    print(input[1])
-    print(input[2])
     plt1<-plot(data_mds, 
                display="sites",
                type= "n", 
@@ -354,13 +352,13 @@ gen_wisconsin_sqrt <- function(data){
                cex.lab=1.3)
     cols1 <- c("black","red")
     points (plt1$sites, 
-            pch=c(16, 17)[as.numeric(input[2])],
-            col=cols1[input[1]], 
+            pch=c(16, 17)[as.numeric(data$input[2])],
+            col=cols1[data$input[1]], 
             cex=1.3)
-    #legend("bottomleft", 
-           #legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
-           #pch=c(16, 17), col=c("black", "black","red", "red"), 
-           #cex=1.3)
+    legend("bottomleft", 
+           legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
+           pch=c(16, 17), col=c("black", "black","red", "red"), 
+           cex=1.3)
     
     ordiellipse(data_mds, input[1], col="black", show.groups='A', lwd=2.5)
     ordiellipse(data_mds, input[1], col="red", show.groups='P', lwd=2.5)
