@@ -340,11 +340,11 @@ gen_wisconsin_sqrt <- function(data){
 
  #### PLOTTING ####
  
-  gen_plot <- function(data_MDS, data, w, ...){
+  gen_plot <- function(data_mds, data, w, ...){
     input<<-c(w,...)
     print(input[1])
     print(input[2])
-    plt1<-plot(subset_mds, 
+    plt1<-plot(data_mds, 
                display="sites",
                type= "n", 
                ylim=c(-2, 1.5), 
@@ -362,7 +362,7 @@ gen_wisconsin_sqrt <- function(data){
            #pch=c(16, 17), col=c("black", "black","red", "red"), 
            #cex=1.3)
     
-    ordiellipse(subset_mds, input[1], col="black", show.groups='A', lwd=2.5)
-    ordiellipse(subset_mds, input[1], col="red", show.groups='P', lwd=2.5)
+    ordiellipse(data_mds, input[1], col="black", show.groups='A', lwd=2.5)
+    ordiellipse(data_mds, input[1], col="red", show.groups='P', lwd=2.5)
     
   }
