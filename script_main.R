@@ -5,29 +5,30 @@
 
 library(dplyr)
 library(vegan)
+myData<-read.csv("GCMS_data.csv", stringsAsFactors=F, check.names=F)
 
 ##### PREPROCCESSING #####
 
 # batch preprocess function
 
-preprocess <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch,
-                       lower_bound, upper_bound, w,...){
-  data_processed <- data_processed %>%
-    extractAbundance() %>%
-    gen_subset_filter(locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch)
-  data_processed_nc <- get_non_control(data_processed)
-  data_processed_c <- get_control(data_processed)
-  data_processed <- remove_control(data_processed_c, data_processed_nc, w,...)
-  data_processed <- data_processed %>%
-    gen_zero_singles() %>%
-    gen_relative_abundance() %>%
-    gen_subset_select_rt()
-  # write data_processed to csv with appropriate name generated from parameters
-  
-  
-  
-  return(data_processed)
-}
+# preprocess <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch,
+#                        lower_bound, upper_bound, w,...){
+#   data_processed <- data_processed %>%
+#     extractAbundance() %>%
+#     gen_subset_filter(locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch)
+#   data_processed_nc <- get_non_control(data_processed)
+#   data_processed_c <- get_control(data_processed)
+#   data_processed <- remove_control(data_processed_c, data_processed_nc, w,...)
+#   data_processed <- data_processed %>%
+#     gen_zero_singles() %>%
+#     gen_relative_abundance() %>%
+#     gen_subset_select_rt()
+#   # write data_processed to csv with appropriate name generated from parameters
+#   
+#   
+#   
+#   return(data_processed)
+# }
 
 # extract abundance values
 
@@ -52,20 +53,6 @@ convert <- function (st) {
   numzero<-substr(st,value+1,value+1)
   return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
 }
-
-# get control samples
-
-get_control <- function(data){
-  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])))
-  return(controls)
-}
-
-# get non-control samples
-
-get_non_control <- function(data){
-  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])))
-}
-
 
 # filter samples which have variable values which appear in each parameter - missing parameter includes all
 
@@ -122,8 +109,18 @@ gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...
   return(data_subset)
 }
 
+# get control samples
 
+get_control <- function(data){
+  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])))
+  return(controls)
+}
 
+# get non-control samples
+
+get_non_control <- function(data){
+  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])))
+}
 
 #remove control samples from a subset (flexible with multiple inputs) 
 
@@ -133,7 +130,7 @@ remove_control <- function(data_control, data_non_control, w, ...){
     found <- FALSE
     for(j in 1:nrow(data_control) && found==FALSE){
       if(match(input[i], data_control[[j]], nomatch=0)!="0"){
-        index<- match(input[i],control[[1]]) #index of the row related to the input name
+        index<- match(input[i],data_control[[1]]) #index of the row related to the input name
         yearofindex<-data_control[index,3] 
         locationofindex<-data_control[index,2] 
         for(k in 26:length(data_control)){
@@ -199,42 +196,43 @@ filename_Safe <- function(string) {
 }
 
 export_file <- function(data,subset){
-  if(isTRUE(all.equal(data$where,subset$where))){
+  tempcontrol<-get_non_control(data)
+  if(isTRUE(all(match(tempcontrol$where,subset$where,nomatch=FALSE)))){
     where_string <- "ALL"
   } else{
     where_string<-filename_Safe(toString(levels(factor(subset$where))))
   }
-  if(isTRUE(all.equal(data$year,subset$year))){
+  if(isTRUE(all(match(tempcontrol$year,subset$year,nomatch=FALSE)))){
     year_string <- "ALL"
   } else{
     year_string<-filename_Safe(toString(levels(factor(subset$year))))
   }
-  if(isTRUE(all.equal(data$body,subset$body))){
+  if(isTRUE(all(match(tempcontrol$body,subset$body,nomatch=FALSE)))){
     body_string <- "ALL"
   } else{
     body_string<-filename_Safe(toString(levels(factor(subset$body))))
   }
-  if(isTRUE(all.equal(data$age,subset$age))){
+  if(isTRUE(all(match(tempcontrol$age,subset$age,nomatch=FALSE)))){
     age_string <- "ALL"
   } else{
     age_string<-filename_Safe(toString(levels(factor(subset$age))))
   }
-  if(isTRUE(all.equal(data$sex,subset$sex))){
+  if(isTRUE(all(match(tempcontrol$sex,subset$sex,nomatch=FALSE)))){
     sex_string <- "ALL"
   } else{
     sex_string<-filename_Safe(toString(levels(factor(subset$sex))))
   }
-  if(isTRUE(all.equal(data$mumpup_pair,subset$mumpup_pair))){
+  if(isTRUE(all(match(tempcontrol$mumpup_pair,subset$mumpup_pair,nomatch=FALSE)))){
     mumpup_pair_string <- "ALL"
   } else{
     mumpup_pair_string<-filename_Safe(toString(levels(factor(subset$mumpup_pair))))
   }
-  if(isTRUE(all.equal(data$nitrogen_error,subset$nitrogen_error))){
+  if(isTRUE(all(match(tempcontrol$Nitrogen_error,subset$Nitrogen_error,nomatch=FALSE)))){
     Nitrogen_error_string <- "ALL"
   } else{
     Nitrogen_error_string<-filename_Safe(toString(levels(factor(subset$Nitrogen_error))))
   }
-  if(isTRUE(all.equal(data$pouches,subset$pouches))){
+  if(isTRUE(all(match(tempcontrol$pouches,subset$pouches,nomatch=FALSE)))){
     pouches_string <- "ALL"
   } else{
     pouches_string<-filename_Safe(toString(levels(factor(subset$pouches))))
