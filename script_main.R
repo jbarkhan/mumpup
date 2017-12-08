@@ -12,8 +12,7 @@ library(vegan)
 
 preprocess <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch,
                        lower_bound, upper_bound, w,...){
-  data_processed <- data_processed %>%
-    extractAbundance() %>%
+  data_processed <- extractAbundance(data_processed) %>%
     gen_subset_filter(locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch)
   data_processed_nc <- get_non_control(data_processed)
   data_processed_c <- get_control(data_processed)
@@ -338,3 +337,32 @@ gen_wisconsin_sqrt <- function(data){
    print("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
    return(pairw.res)
  } 
+
+ #### PLOTTING ####
+ 
+  gen_plot <- function(data_MDS, data, w, ...){
+    input<<-c(w,...)
+    print(input[1])
+    print(input[2])
+    plt1<-plot(subset_mds, 
+               display="sites",
+               type= "n", 
+               ylim=c(-2, 1.5), 
+               cex.axis=1.2, 
+               ylab="Dimension 1", 
+               xlab="Dimension 2",
+               cex.lab=1.3)
+    cols1 <- c("black","red")
+    points (plt1$sites, 
+            pch=c(16, 17)[as.numeric(input[2])],
+            col=cols1[input[1]], 
+            cex=1.3)
+    #legend("bottomleft", 
+           #legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
+           #pch=c(16, 17), col=c("black", "black","red", "red"), 
+           #cex=1.3)
+    
+    ordiellipse(subset_mds, input[1], col="black", show.groups='A', lwd=2.5)
+    ordiellipse(subset_mds, input[1], col="red", show.groups='P', lwd=2.5)
+    
+  }
