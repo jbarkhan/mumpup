@@ -158,8 +158,8 @@ remove_control <- function(data_control, data_non_control, w, ...){
 gen_zero_singles <- function(data){
   data_zeros <- cbind(data[,26:length(data)])
   for(i in 1:length(data_zeros)){
-    if(sum(data_zeros[,i] != 0) == 1)
-      data_zeros[,i][data_zeros[,i] > 0] <- 0
+    if(isTRUE(sum(data_zeros[1:NROW(data_zeros),i] != 0) == 1))
+      data_zeros <- data_zeros[1:NROW(data_zeros),-i]
   }
   data_zeros <- cbind(data[,1:25], data_zeros)
   return(data_zeros)
