@@ -20,7 +20,7 @@ preprocess <- function(data, locations, year, bodies, ages, sexes, nitrogen, mum
 
 #THE FOLLOWING FUNCTIONS BELOW MUST BE PERFORMED IN ORDER LABELLED 1 to 9 (If wish to do it seperately)
 
-# 1. extract abundance values
+# 1. extract abundance values from original dataset
 extractAbundance <- function(data){
   data_extract <- data.frame(data, check.names = F)
   for(i in 26:length(data_extract)){
@@ -44,7 +44,7 @@ convert <- function (st) {
   return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
 }
 
-# 2. filter samples which have variable values which appear in each parameter - missing parameter includes all
+# 2. filter samples which have variable values which appear in each parameter - missing parameter or empty string includes all
 gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){ #passing data after extract abundance values
   if(missing(locations)|locations==""){
     locations <- unique(select(data, where))[,1]
@@ -143,18 +143,18 @@ remove_control <- function(data_control, data_non_control, remove=c(...)){ #data
   return(data_non_control)
 }
 
-# 6. zero abundances for compounds which only occur in a single observation
+# 6. zero abundances for compounds which only occur in a single observation after remove controls
 gen_zero_singles <- function(data){
   data_zeros <- cbind(data[,26:length(data)])
   for(i in 1:length(data_zeros)){
-    if(isTRUE(sum(data_zeros[1:NROW(data_zeros),i] != 0) == 1))
+    if(isTRUE(sum(data_zeros[1:NROW(data_zeros),i] != 0) == 1 || sum(data_zeros[1:NROW(data_zeros),i] != 0) == 0))
       data_zeros <- data_zeros[1:NROW(data_zeros),-i]
   }
   data_zeros <- cbind(data[,1:25], data_zeros)
   return(data_zeros)
 }
 
-# 7. transform data to relative abundance
+# 7. transform data to relative abundance after remove zero abundances from previous step
 gen_relative_abundance <- function(data){
   data_relative <- cbind(data[,26:length(data)])
   sums <- apply(data_relative, 1, sum)
@@ -163,7 +163,7 @@ gen_relative_abundance <- function(data){
   return(data_relative)
 }
 
-# 8. select only columns with retention time in range
+# 8. select only columns with retention time in range after transform data to relative abundance
 
 gen_subset_select_rt <- function(data, bound_lower, bound_upper){
   data_retentions <- cbind(data[,26:length(data)])
