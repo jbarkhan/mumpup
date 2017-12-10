@@ -7,7 +7,18 @@ library(dplyr)
 library(vegan)
 myData<-read.csv("GCMS_data.csv", stringsAsFactors=F, check.names=F)
 
-#THE FOLLOWING FUNCTIONS BELOW MUST BE PERFORMED IN ORDER LABELLED 1 to 9 FOR NOW (Wrapper function still on progress)
+#PRE-PROCESSING FUNCTION (If perform this, not required to perform all other functions below)
+
+preprocess <- function(data, locations, year, bodies, ages, sexes, nitrogen, mumpup, pouch, lower_bound, upper_bound, remove){ #Insert "" if there's no input to the variable
+  data_processed <- data %>% extractAbundance() %>% gen_subset_filter(locations, year, bodies, ages, sexes, nitrogen, mumpup, pouch)
+  data_processed_control<-get_control(data_processed)
+  data_processed_non_control<- get_non_control(data_processed)
+  data_processed<-remove_control(data_processed_control, data_processed_non_control, remove)
+  data_processed<- data_processed %>% gen_zero_singles() %>% gen_relative_abundance() %>% gen_subset_select_rt(lower_bound, upper_bound)
+  return(data_processed)
+}
+
+#THE FOLLOWING FUNCTIONS BELOW MUST BE PERFORMED IN ORDER LABELLED 1 to 9 (If wish to do it seperately)
 
 # 1. extract abundance values
 extractAbundance <- function(data){
@@ -35,42 +46,42 @@ convert <- function (st) {
 
 # 2. filter samples which have variable values which appear in each parameter - missing parameter includes all
 gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){ #passing data after extract abundance values
-  if(missing(locations)){
+  if(missing(locations)|locations==""){
     locations <- unique(select(data, where))[,1]
   } else if(all(match(locations,levels(factor(data$where)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(years)){
+  if(missing(years)|years==""){
     years <- unique(select(data, year))[,1]
   } else if(all(match(years,levels(factor(data$year)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(bodies)){
+  if(missing(bodies)|bodies==""){
     bodies <- unique(select(data, body))[,1]
   } else if(all(match(bodies,levels(factor(data$body)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(ages)){
+  if(missing(ages)|ages==""){
     ages <- unique(select(data, age))[,1]
   } else if(all(match(ages,levels(factor(data$age)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(sexes)){
+  if(missing(sexes)|sexes==""){
     sexes <- unique(select(data, sex))[,1]
   } else if(all(match(sexes,levels(factor(data$sex)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(nitrogen)){
+  if(missing(nitrogen)|nitrogen==""){
     nitrogen <- unique(select(data, Nitrogen_error))[,1]
   } else if(all(match(nitrogen,levels(factor(data$Nitrogen_error)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(mumpups)){
+  if(missing(mumpups)|mumpups==""){
     mumpups <- unique(select(data, mumpup_pair))[,1]
   } else if(all(match(mumpups,levels(factor(data$mumpup_pair)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(pouch)){
+  if(missing(pouch)|pouch==""){
     pouch <- unique(select(data, pouches))[,1]
   } else if(all(match(pouch,levels(factor(data$pouches)), nomatch=0))==FALSE){
     return("ERROR")
@@ -100,7 +111,9 @@ get_non_control <- function(data){
 
 # 5. remove control samples from a subset (flexible with multiple inputs) 
 remove_control <- function(data_control, data_non_control, remove=c(...)){ #data_control (object from running get_control), data_non_control (object from running get_non_control), ... (Optional Arguments for names of control sample))
-  if(missing(remove) ||length(remove)==0){
+  input<<- remove
+  
+  if(remove==""){
     return(data_non_control)
   }
   
@@ -170,10 +183,10 @@ filename_Safe <- function(string) {
 
 export_file <- function(subset){
   factorwhere<- levels(factor(c("DMM", "KI", "OI", "ZOO")))
-  factoryear<- levels(factor(c(2015, 2016)))
+  factoryear<- levels(factor(c("2015", "2016")))
   factorbody<- levels(factor(c("A", "B", "B/E", "Bel", "E", "Fb", "Fh", "H", "M", "Mammae", "N", "Tn")))
   factorage<- levels(factor(c("ad", "1", "2", "3", "SAM")))
-  factorsex<- levels(factor(c("M", "F")))
+  factorsex<- levels(factor(c("F", "M")))
   factormumpuppair<- levels(factor(c("Y", "N")))
   factorpouches<- levels(factor(c("Y", "N")))
   factornitrogenerror<- levels(factor(c("Y", "N")))
@@ -226,11 +239,11 @@ export_file <- function(subset){
     pouches_string<-filename_Safe(toString(levels(factor(subset$pouches))))
   }
   
-  input_string<-filename_Safe(paste(input))
+  input_string<-filename_Safe(toString(paste(input)))
   mintime_string<-filename_Safe(names(data_retentions_subset)[1])
   maxtime_string<-filename_Safe(toString(names(data_retentions_subset)[length(data_retentions_subset)]))
   
-  mystring<- paste("Where",where_string,"Year",year_string,"Body",body_string,"Age",age_string,"Sex",sex_string,"Nitrogen_error",Nitrogen_error_string,"Mumpup_pair",mumpup_pair_string,"Pouches",pouches_string, "Control", input_string, "Time", mintime_string, maxtime_string)
+  mystring<- paste0("Where ",where_string," Year ",year_string," Body ",body_string," Age ",age_string," Sex ",sex_string," Nitrogen_error ",Nitrogen_error_string," Mumpup_pair ",mumpup_pair_string," Pouches ",pouches_string, " Control ", input_string, " Time ", mintime_string, maxtime_string)
   write.csv(subset, paste0(filename_Safe(mystring),".csv"),row.names=F)
 }
 
