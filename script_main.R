@@ -5,31 +5,11 @@
 
 library(dplyr)
 library(vegan)
+myData<-read.csv("GCMS_data.csv", stringsAsFactors=F, check.names=F)
 
-##### PREPROCCESSING #####
+#THE FOLLOWING FUNCTIONS BELOW MUST BE PERFORMED IN ORDER LABELLED 1 to 9 FOR NOW (Wrapper function still on progress)
 
-# batch preprocess function
-
-preprocess <- function(data, locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch,
-                       lower_bound, upper_bound, w,...){
-  data_processed <- extractAbundance(data_processed) %>%
-    gen_subset_filter(locations, years, bodies, ages, sexes, nitrogen, mumpups, pouch)
-  data_processed_nc <- get_non_control(data_processed)
-  data_processed_c <- get_control(data_processed)
-  data_processed <- remove_control(data_processed_c, data_processed_nc, w,...)
-  data_processed <- data_processed %>%
-    gen_zero_singles() %>%
-    gen_relative_abundance() %>%
-    gen_subset_select_rt()
-  # write data_processed to csv with appropriate name generated from parameters
-  
-  
-  
-  return(data_processed)
-}
-
-# extract abundance values
-
+# 1. extract abundance values
 extractAbundance <- function(data){
   data_extract <- data.frame(data, check.names = F)
   for(i in 26:length(data_extract)){
@@ -44,6 +24,7 @@ extractAbundance <- function(data){
   return(data_extract)
 }
 
+#helper function for extractAbundance (Don't need to run this)
 convert <- function (st) {
   value <-regexpr("E",st)[1]
   first<-substr(st,value-3,value-3)
@@ -52,23 +33,8 @@ convert <- function (st) {
   return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
 }
 
-# get control samples
-
-get_control <- function(data){
-  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])))
-  return(controls)
-}
-
-# get non-control samples
-
-get_non_control <- function(data){
-  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])))
-}
-
-
-# filter samples which have variable values which appear in each parameter - missing parameter includes all
-
-gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes, nitrogen, mumpups, pouch){
+# 2. filter samples which have variable values which appear in each parameter - missing parameter includes all
+gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){ #passing data after extract abundance values
   if(missing(locations)){
     locations <- unique(select(data, where))[,1]
   } else if(all(match(locations,levels(factor(data$where)), nomatch=0))==FALSE){
@@ -91,22 +57,22 @@ gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...
   }
   if(missing(sexes)){
     sexes <- unique(select(data, sex))[,1]
-  } else if(match(sexes,levels(factor(data$sex)), nomatch=0)==0){
+  } else if(all(match(sexes,levels(factor(data$sex)), nomatch=0))==FALSE){
     return("ERROR")
   }
   if(missing(nitrogen)){
     nitrogen <- unique(select(data, Nitrogen_error))[,1]
-  } else if(match(nitrogen,levels(factor(data$Nitrogen_error)), nomatch=0)==0){
+  } else if(all(match(nitrogen,levels(factor(data$Nitrogen_error)), nomatch=0))==FALSE){
     return("ERROR")
   }
   if(missing(mumpups)){
     mumpups <- unique(select(data, mumpup_pair))[,1]
-  } else if(match(mumpups,levels(factor(data$mumpup_pair)), nomatch=0)==0){
+  } else if(all(match(mumpups,levels(factor(data$mumpup_pair)), nomatch=0))==FALSE){
     return("ERROR")
   }
   if(missing(pouch)){
     pouch <- unique(select(data, pouches))[,1]
-  } else if(match(pouch,levels(factor(data$pouches)), nomatch=0)==0){
+  } else if(all(match(pouch,levels(factor(data$pouches)), nomatch=0))==FALSE){
     return("ERROR")
   }
   
@@ -121,18 +87,28 @@ gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...
   return(data_subset)
 }
 
+# 3. get control samples after obtain subset of data
+get_control <- function(data){
+  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])))
+  return(controls)
+}
 
+# 4. get non-control samples after obtain subset of data
+get_non_control <- function(data){
+  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])))
+}
 
-
-#remove control samples from a subset (flexible with multiple inputs) 
-
-remove_control <- function(data_control, data_non_control, w, ...){
-  input<<-c(w,...) #create vector of names of control sample that user wishes to remove
-  for(i in 1:length(input)){
+# 5. remove control samples from a subset (flexible with multiple inputs) 
+remove_control <- function(data_control, data_non_control, remove=c(...)){ #data_control (object from running get_control), data_non_control (object from running get_non_control), ... (Optional Arguments for names of control sample))
+  if(missing(remove) ||length(remove)==0){
+    return(data_non_control)
+  }
+  
+  for(i in 1:length(remove)){
     found <- FALSE
     for(j in 1:nrow(data_control) && found==FALSE){
-      if(match(input[i], data_control[[j]], nomatch=0)!="0"){
-        index<- match(input[i],control[[1]]) #index of the row related to the input name
+      if(match(remove[i], data_control[[j]], nomatch=0)!="0"){
+        index<- match(remove[i],data_control[[1]]) #index of the row related to the input name
         yearofindex<-data_control[index,3] 
         locationofindex<-data_control[index,2] 
         for(k in 26:length(data_control)){
@@ -154,9 +130,7 @@ remove_control <- function(data_control, data_non_control, w, ...){
   return(data_non_control)
 }
 
-
-# zero abundances for compounds which only occur in a single observation
-
+# 6. zero abundances for compounds which only occur in a single observation
 gen_zero_singles <- function(data){
   data_zeros <- cbind(data[,26:length(data)])
   for(i in 1:length(data_zeros)){
@@ -167,9 +141,7 @@ gen_zero_singles <- function(data){
   return(data_zeros)
 }
 
-
-# transform data to relative abundance
-
+# 7. transform data to relative abundance
 gen_relative_abundance <- function(data){
   data_relative <- cbind(data[,26:length(data)])
   sums <- apply(data_relative, 1, sum)
@@ -178,8 +150,7 @@ gen_relative_abundance <- function(data){
   return(data_relative)
 }
 
-
-# select only columns with retention time in range
+# 8. select only columns with retention time in range
 
 gen_subset_select_rt <- function(data, bound_lower, bound_upper){
   data_retentions <- cbind(data[,26:length(data)])
@@ -190,52 +161,68 @@ gen_subset_select_rt <- function(data, bound_lower, bound_upper){
   return(data_subset)
 }
 
-# Creates csv file
+# 9. Creates csv file
 filename_Safe <- function(string) {
   safeString <- gsub("[^[:alnum:]]", "_", string)
   safeString <- gsub("_+", "_", safeString)
   safeString
 }
 
-export_file <- function(data,subset){
-  if(isTRUE(all.equal(data$where,subset$where))){
-    where_string <- "ALL"
+export_file <- function(subset){
+  factorwhere<- levels(factor(c("DMM", "KI", "OI", "ZOO")))
+  factoryear<- levels(factor(c(2015, 2016)))
+  factorbody<- levels(factor(c("A", "B", "B/E", "Bel", "E", "Fb", "Fh", "H", "M", "Mammae", "N", "Tn")))
+  factorage<- levels(factor(c("ad", "1", "2", "3", "SAM")))
+  factorsex<- levels(factor(c("M", "F")))
+  factormumpuppair<- levels(factor(c("Y", "N")))
+  factorpouches<- levels(factor(c("Y", "N")))
+  factornitrogenerror<- levels(factor(c("Y", "N")))
+  
+  if(all(levels(factor(subset$where))==factorwhere)){
+    where_string<- "ALL"
   } else{
     where_string<-filename_Safe(toString(levels(factor(subset$where))))
   }
-  if(isTRUE(all.equal(data$year,subset$year))){
-    year_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$year))==factoryear)){
+    year_string<-"ALL"
+  }else{
     year_string<-filename_Safe(toString(levels(factor(subset$year))))
   }
-  if(isTRUE(all.equal(data$body,subset$body))){
-    body_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$body))==factorbody)){
+    body_string<-"ALL"
+  }else{
     body_string<-filename_Safe(toString(levels(factor(subset$body))))
   }
-  if(isTRUE(all.equal(data$age,subset$age))){
-    age_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$age))==factorage)){
+    age_string<-"ALL"
+  }else{
     age_string<-filename_Safe(toString(levels(factor(subset$age))))
   }
-  if(isTRUE(all.equal(data$sex,subset$sex))){
-    sex_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$sex))==factorsex)){
+    sex_string<-"ALL"
+  }else{
     sex_string<-filename_Safe(toString(levels(factor(subset$sex))))
   }
-  if(isTRUE(all.equal(data$mumpup_pair,subset$mumpup_pair))){
-    mumpup_pair_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$mumpup_pair))==factormumpuppair)){
+    mumpup_pair_string<-"ALL"
+  }else{
     mumpup_pair_string<-filename_Safe(toString(levels(factor(subset$mumpup_pair))))
   }
-  if(isTRUE(all.equal(data$nitrogen_error,subset$nitrogen_error))){
-    Nitrogen_error_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$Nitrogen_error))==factornitrogenerror)){
+    Nitrogen_error_string<-"ALL"
+  }else{
     Nitrogen_error_string<-filename_Safe(toString(levels(factor(subset$Nitrogen_error))))
   }
-  if(isTRUE(all.equal(data$pouches,subset$pouches))){
-    pouches_string <- "ALL"
-  } else{
+  
+  if(all(levels(factor(subset$pouches))==factorpouches)){
+    pouches_string<-"ALL"
+  }else{
     pouches_string<-filename_Safe(toString(levels(factor(subset$pouches))))
   }
   
@@ -246,6 +233,9 @@ export_file <- function(data,subset){
   mystring<- paste("Where",where_string,"Year",year_string,"Body",body_string,"Age",age_string,"Sex",sex_string,"Nitrogen_error",Nitrogen_error_string,"Mumpup_pair",mumpup_pair_string,"Pouches",pouches_string, "Control", input_string, "Time", mintime_string, maxtime_string)
   write.csv(subset, paste0(filename_Safe(mystring),".csv"),row.names=F)
 }
+
+
+
 
 
 
@@ -290,82 +280,82 @@ gen_wisconsin_sqrt <- function(data){
 }
 
 # execute adonis
- 
- execute_adonis <- function(data_transformed, data, field_1, field_2) {
-   if(missing(field_2)){
-     i <- grep(field_1, colnames(data))
-     ad <- adonis(data_transformed ~ data[,i])
-     return(ad)
-   }
-   i <- grep(field_1, colnames(data))
-   j <- grep(field_2, colnames(data))
-   ad <- adonis(data_transformed ~ data[,i] * data[,j])
-   return(ad)
- } 
- 
- 
- # pairwise adonis function
- 
- pairwise.adonis <- function(x,factors, sim.function = 'vegdist', sim.method = 'bray', p.adjust.m ='holm')
- {
-   co = combn(unique(as.character(factors)),2)
-   pairs = c()
-   F.Model =c()
-   R2 = c()
-   p.value = c()
-   
-   
-   for(elem in 1:ncol(co)){
-     if(sim.function == 'daisy'){
-       library(cluster); x1 = daisy(x[factors %in% c(co[1,elem],co[2,elem]),],metric=sim.method)
-     } else{x1 = vegdist(x[factors %in% c(co[1,elem],co[2,elem]),],method=sim.method)}
-     
-     ad = adonis(x1 ~ factors[factors %in% c(co[1,elem],co[2,elem])] );
-     pairs = c(pairs,paste(co[1,elem],'vs',co[2,elem]));
-     F.Model =c(F.Model,ad$aov.tab[1,4]);
-     R2 = c(R2,ad$aov.tab[1,5]);
-     p.value = c(p.value,ad$aov.tab[1,6])
-   }
-   p.adjusted = p.adjust(p.value,method=p.adjust.m)
-   sig = c(rep('',length(p.adjusted)))
-   sig[p.adjusted <= 0.05] <-'.'
-   sig[p.adjusted <= 0.01] <-'*'
-   sig[p.adjusted <= 0.001] <-'**'
-   sig[p.adjusted <= 0.0001] <-'***'
-   
-   pairw.res = data.frame(pairs,F.Model,R2,p.value,p.adjusted,sig)
-   print("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
-   return(pairw.res)
- } 
 
- #### PLOTTING ####
- # Need to check if more than two fields will ever be required
-  gen_plot <- function(data_mds, data, field1, field2){
-    
-    i <- grep(field1, colnames(data))
-    j <- grep(field2, colnames(data))
-    
-    data[,i] = factor(data[,i]) # Data needs to be refactored so 
-    data[,j] = factor(data[,j]) # that values can be grouped
-    
-    plt1<-plot(data_mds, 
-               display="sites",
-               type= "n", 
-               ylim=c(-2, 1.5), 
-               cex.axis=1.2, 
-               ylab="Dimension 1", 
-               xlab="Dimension 2",
-               cex.lab=1.3)
-    cols1 <- c("black","red")
-    points (plt1$sites, 
-            pch=c(16, 17)[as.numeric(data[,j])],
-            col=cols1[data[,i]], 
-            cex=1.3)
-    legend("bottomleft", 
-           legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
-           pch=c(16, 17), col=c("black", "black","red", "red"), 
-           cex=1.3)
-    
-    ordiellipse(data_mds, data[,i], col="black", show.groups='A', lwd=2.5)
-    ordiellipse(data_mds, data[,i], col="red", show.groups='P', lwd=2.5)
+execute_adonis <- function(data_transformed, data, field_1, field_2) {
+  if(missing(field_2)){
+    i <- grep(field_1, colnames(data))
+    ad <- adonis(data_transformed ~ data[,i])
+    return(ad)
   }
+  i <- grep(field_1, colnames(data))
+  j <- grep(field_2, colnames(data))
+  ad <- adonis(data_transformed ~ data[,i] * data[,j])
+  return(ad)
+} 
+
+
+# pairwise adonis function
+
+pairwise.adonis <- function(x,factors, sim.function = 'vegdist', sim.method = 'bray', p.adjust.m ='holm')
+{
+  co = combn(unique(as.character(factors)),2)
+  pairs = c()
+  F.Model =c()
+  R2 = c()
+  p.value = c()
+  
+  
+  for(elem in 1:ncol(co)){
+    if(sim.function == 'daisy'){
+      library(cluster); x1 = daisy(x[factors %in% c(co[1,elem],co[2,elem]),],metric=sim.method)
+    } else{x1 = vegdist(x[factors %in% c(co[1,elem],co[2,elem]),],method=sim.method)}
+    
+    ad = adonis(x1 ~ factors[factors %in% c(co[1,elem],co[2,elem])] );
+    pairs = c(pairs,paste(co[1,elem],'vs',co[2,elem]));
+    F.Model =c(F.Model,ad$aov.tab[1,4]);
+    R2 = c(R2,ad$aov.tab[1,5]);
+    p.value = c(p.value,ad$aov.tab[1,6])
+  }
+  p.adjusted = p.adjust(p.value,method=p.adjust.m)
+  sig = c(rep('',length(p.adjusted)))
+  sig[p.adjusted <= 0.05] <-'.'
+  sig[p.adjusted <= 0.01] <-'*'
+  sig[p.adjusted <= 0.001] <-'**'
+  sig[p.adjusted <= 0.0001] <-'***'
+  
+  pairw.res = data.frame(pairs,F.Model,R2,p.value,p.adjusted,sig)
+  print("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
+  return(pairw.res)
+} 
+
+#### PLOTTING ####
+# Need to check if more than two fields will ever be required
+gen_plot <- function(data_mds, data, field1, field2){
+  
+  i <- grep(field1, colnames(data))
+  j <- grep(field2, colnames(data))
+  
+  data[,i] = factor(data[,i]) # Data needs to be refactored so 
+  data[,j] = factor(data[,j]) # that values can be grouped
+  
+  plt1<-plot(data_mds, 
+             display="sites",
+             type= "n", 
+             ylim=c(-2, 1.5), 
+             cex.axis=1.2, 
+             ylab="Dimension 1", 
+             xlab="Dimension 2",
+             cex.lab=1.3)
+  cols1 <- c("black","red")
+  points (plt1$sites, 
+          pch=c(16, 17)[as.numeric(data[,j])],
+          col=cols1[data[,i]], 
+          cex=1.3)
+  legend("bottomleft", 
+         legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
+         pch=c(16, 17), col=c("black", "black","red", "red"), 
+         cex=1.3)
+  
+  ordiellipse(data_mds, data[,i], col="black", show.groups='A', lwd=2.5)
+  ordiellipse(data_mds, data[,i], col="red", show.groups='P', lwd=2.5)
+}
