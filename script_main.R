@@ -339,9 +339,15 @@ gen_wisconsin_sqrt <- function(data){
  } 
 
  #### PLOTTING ####
- 
-  gen_plot <- function(data_mds, data, w, ...){
-    input<<-c(w,...)
+ # Need to check if more than two fields will ever be required
+  gen_plot <- function(data_mds, data, field1, field2){
+    
+    i <- grep(field1, colnames(data))
+    j <- grep(field2, colnames(data))
+    
+    data[,i] = factor(data[,i]) # Data needs to be refactored so 
+    data[,j] = factor(data[,j]) # that values can be grouped
+    
     plt1<-plot(data_mds, 
                display="sites",
                type= "n", 
@@ -352,15 +358,14 @@ gen_wisconsin_sqrt <- function(data){
                cex.lab=1.3)
     cols1 <- c("black","red")
     points (plt1$sites, 
-            pch=c(16, 17)[as.numeric(data$input[2])],
-            col=cols1[data$input[1]], 
+            pch=c(16, 17)[as.numeric(data[,j])],
+            col=cols1[data[,i]], 
             cex=1.3)
     legend("bottomleft", 
            legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
            pch=c(16, 17), col=c("black", "black","red", "red"), 
            cex=1.3)
     
-    ordiellipse(data_mds, input[1], col="black", show.groups='A', lwd=2.5)
-    ordiellipse(data_mds, input[1], col="red", show.groups='P', lwd=2.5)
-    
+    ordiellipse(data_mds, data[,i], col="black", show.groups='A', lwd=2.5)
+    ordiellipse(data_mds, data[,i], col="red", show.groups='P', lwd=2.5)
   }
