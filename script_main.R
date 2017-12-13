@@ -146,10 +146,12 @@ remove_control <- function(data_control, data_non_control, remove=c(...)){ #data
 # 6. zero abundances for compounds which only occur in a single observation after remove controls
 gen_zero_singles <- function(data){
   data_zeros <- cbind(data[,26:length(data)])
+  zerovector <-vector()
   for(i in 1:length(data_zeros)){
     if(isTRUE(sum(data_zeros[1:NROW(data_zeros),i] != 0) == 1 || sum(data_zeros[1:NROW(data_zeros),i] != 0) == 0))
-      data_zeros <- data_zeros[1:NROW(data_zeros),-i]
+      zerovector<-c(zerovector,i)
   }
+  data_zeros <- data_zeros[1:NROW(data_zeros),-zerovector]
   data_zeros <- cbind(data[,1:25], data_zeros)
   return(data_zeros)
 }
