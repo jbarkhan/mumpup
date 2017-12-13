@@ -35,7 +35,7 @@ extractAbundance <- function(data){
   return(data_extract)
 }
 
-#helper function for extractAbundance (Don't need to run this)
+# helper function for extractAbundance (Don't need to run this)
 convert <- function (st) {
   value <-regexpr("E",st)[1]
   first<-substr(st,value-3,value-3)
@@ -45,7 +45,7 @@ convert <- function (st) {
 }
 
 # 2. filter samples which have variable values which appear in each parameter - missing parameter or empty string includes all
-gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){ #passing data after extract abundance values
+gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){
   if(missing(locations)|locations==""){
     locations <- unique(select(data, where))[,1]
   } else if(all(match(locations,levels(factor(data$where)), nomatch=0))==FALSE){
