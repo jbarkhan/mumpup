@@ -6,6 +6,7 @@
 library(dplyr)
 library(vegan)
 myData<-read.csv("GCMS_data.csv", stringsAsFactors=F, check.names=F)
+options(warn=-1)
 
 #PRE-PROCESSING FUNCTION (If perform this, not required to perform all other functions below)
 
@@ -100,13 +101,13 @@ gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...
 
 # 3. get control samples after obtain subset of data
 get_control <- function(data){
-  controls <- subset(data, (is.na(data[,5])) & (is.na(data[,6])))
+  controls <- subset(data, (is.na(data[5])) & (is.na(data[6])))
   return(controls)
 }
 
 # 4. get non-control samples after obtain subset of data
 get_non_control <- function(data){
-  non_controls <- subset(data, (!is.na(data[,5])) | (!is.na(data[,6])))
+  non_controls <- subset(data, (!is.na(data[5])) | (!is.na(data[6])))
 }
 
 # 5. remove control samples from a subset (flexible with multiple inputs) 
