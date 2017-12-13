@@ -46,42 +46,42 @@ convert <- function (st) {
 
 # 2. filter samples which have variable values which appear in each parameter - missing parameter or empty string includes all
 gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){
-  if(missing(locations)|locations==""){
+  if(locations==""){
     locations <- unique(select(data, where))[,1]
   } else if(all(match(locations,levels(factor(data$where)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(years)|years==""){
+  if(years==""){
     years <- unique(select(data, year))[,1]
   } else if(all(match(years,levels(factor(data$year)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(bodies)|bodies==""){
+  if(bodies==""){
     bodies <- unique(select(data, body))[,1]
   } else if(all(match(bodies,levels(factor(data$body)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(ages)|ages==""){
+  if(ages==""){
     ages <- unique(select(data, age))[,1]
   } else if(all(match(ages,levels(factor(data$age)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(sexes)|sexes==""){
+  if(sexes==""){
     sexes <- unique(select(data, sex))[,1]
   } else if(all(match(sexes,levels(factor(data$sex)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(nitrogen)|nitrogen==""){
+  if(nitrogen==""){
     nitrogen <- unique(select(data, Nitrogen_error))[,1]
   } else if(all(match(nitrogen,levels(factor(data$Nitrogen_error)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(mumpups)|mumpups==""){
+  if(mumpups==""){
     mumpups <- unique(select(data, mumpup_pair))[,1]
   } else if(all(match(mumpups,levels(factor(data$mumpup_pair)), nomatch=0))==FALSE){
     return("ERROR")
   }
-  if(missing(pouch)|pouch==""){
+  if(pouch==""){
     pouch <- unique(select(data, pouches))[,1]
   } else if(all(match(pouch,levels(factor(data$pouches)), nomatch=0))==FALSE){
     return("ERROR")
