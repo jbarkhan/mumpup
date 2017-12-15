@@ -11,8 +11,9 @@ options(warn=-1)
 #PRE-PROCESSING FUNCTION (If perform this, not required to perform all other functions below)
 
 preprocess <- function(data, locations, year, bodies, ages, sexes, nitrogen, mumpup, pouch, lower_bound, upper_bound, remove){ #Insert "" if there's no input to the variable
-  data_processed <- data %>% extractAbundance() %>% gen_subset_filter(locations, year, bodies, ages, sexes, nitrogen, mumpup, pouch)
+  data_processed <- data %>% extractAbundance() 
   data_processed_control<-get_control(data_processed)
+  data_processed<- data_processed %>% gen_subset_filter(locations, year, bodies, ages, sexes, nitrogen, mumpup, pouch)
   data_processed_non_control<- get_non_control(data_processed)
   data_processed<-remove_control(data_processed_control, data_processed_non_control, remove)
   data_processed<- data_processed %>% gen_zero_singles() %>% gen_relative_abundance() %>% gen_subset_select_rt(lower_bound, upper_bound)
@@ -45,7 +46,13 @@ convert <- function (st) {
   return((as.numeric(first)*10+as.numeric(dec))*10^(as.numeric(numzero)-1))
 }
 
-# 2. filter samples which have variable values which appear in each parameter - missing parameter or empty string includes all
+# 2. get control samples after extract abundance
+get_control <- function(data){
+  controls <- subset(data, (is.na(data[5])) & (is.na(data[6])))
+  return(controls)
+}
+
+# 3. filter samples which have variable values which appear in each parameter - missing parameter or empty string includes all
 gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...), ages=c(...), sexes=c(...), nitrogen=c(...), mumpups=c(...), pouch=c(...)){
   if(locations==""){
     locations <- unique(select(data, where))[,1]
@@ -97,12 +104,6 @@ gen_subset_filter <- function(data, locations=c(...), years=c(...), bodies=c(...
                         mumpup_pair %in% mumpups,
                         pouches %in% pouch)
   return(data_subset)
-}
-
-# 3. get control samples after obtain subset of data
-get_control <- function(data){
-  controls <- subset(data, (is.na(data[5])) & (is.na(data[6])))
-  return(controls)
 }
 
 # 4. get non-control samples after obtain subset of data
