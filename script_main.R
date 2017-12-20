@@ -373,6 +373,6 @@ gen_plot <- function(data_mds, data, field1, field2){
          pch=c(16, 17), col=c("black", "black","red", "red"), 
          cex=1.3)
   
-  ordiellipse(data_mds, data[,i], col="black", show.groups='A', lwd=2.5)
-  ordiellipse(data_mds, data[,i], col="red", show.groups='P', lwd=2.5)
+  ordiellipse(data_mds, field1, col="black", show.groups='A', lwd=2.5)
+  ordiellipse(data_mds, field1, col="red", show.groups='P', lwd=2.5)
 }
