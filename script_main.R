@@ -348,13 +348,6 @@ pairwise.adonis <- function(x,factors, sim.function = 'vegdist', sim.method = 'b
 #### PLOTTING ####
 # Need to check if more than two fields will ever be required
 gen_plot <- function(data_mds, data, field1, field2){
-  
-  i <- grep(field1, colnames(data))
-  j <- grep(field2, colnames(data))
-  
-  data[,i] = factor(data[,i]) # Data needs to be refactored so 
-  data[,j] = factor(data[,j]) # that values can be grouped
-  
   plt1<-plot(data_mds, 
              display="sites",
              type= "n", 
@@ -363,16 +356,40 @@ gen_plot <- function(data_mds, data, field1, field2){
              ylab="Dimension 1", 
              xlab="Dimension 2",
              cex.lab=1.3)
-  cols1 <- c("black","red")
-  points (plt1$sites, 
-          pch=c(16, 17)[as.numeric(data[,j])],
-          col=cols1[data[,i]], 
-          cex=1.3)
+  
+  cols1 <- c("black","red","green","blue","purple","orange","grey","brown",
+             "yellow","gold","deeppink")
+  shapes = c(16, 17, 15, 18, 19, 0, 1, 2, 3, 4, 5)
+  
+
+  i <- grep(field1, colnames(data))
+  data[,i] = factor(data[,i]) # Data needs to be refactored for grouping
+  field1_levels = levels(data[,i])
+  
+  if (field2 != "") {
+    j <- grep(field2, colnames(data))
+    data[,j] = factor(data[,j]) # Data needs to be refactored for grouping
+    field2_levels = levels(data[,j])
+    points (plt1$sites, 
+            pch=shapes[as.numeric(data[,j])],
+            col=cols1[data[,i]], 
+            cex=1.3)
+  }
+  else{
+    points (plt1$sites, 
+            pch=c(16),
+            col=cols1[data[,i]], 
+            cex=1.3)
+  }
+  
+  
   legend("bottomleft", 
          legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
-         pch=c(16, 17), col=c("black", "black","red", "red"), 
+         pch=c(16, 17, 15, 18, 19), col=c("black", "black","red", "red"), 
          cex=1.3)
   
-  ordiellipse(data_mds, field1, col="black", show.groups='A', lwd=2.5)
-  ordiellipse(data_mds, field1, col="red", show.groups='P', lwd=2.5)
+  for(n in 1:length(field1_levels)){
+    ordiellipse(data_mds, data[,i], col=cols1[n],
+                show.groups=field1_levels[n], lwd=2.5)
+  }
 }
