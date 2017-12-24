@@ -381,15 +381,33 @@ gen_plot <- function(data_mds, data, field1, field2){
             col=cols1[data[,i]], 
             cex=1.3)
   }
-  
-  
-  legend("bottomleft", 
-         legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
-         pch=c(16, 17, 15, 18, 19), col=c("black", "black","red", "red"), 
-         cex=1.3)
+
+  build_legend = NULL
+  build_col = NULL
+  build_pch = NULL
   
   for(n in 1:length(field1_levels)){
     ordiellipse(data_mds, data[,i], col=cols1[n],
                 show.groups=field1_levels[n], lwd=2.5)
+    if (field2 == "") {
+      build_legend = c(build_legend, paste(toupper(field1), field1_levels[n]))
+      build_col = c(build_col,cols1[n])
+      build_pch = shapes[1]
+      
+    }
+    else {
+      for(o in 1:length(field2_levels)){
+        build_legend = c(build_legend, paste(toupper(field1), field1_levels[n],
+                                             toupper(field2), field2_levels[o]))
+        build_col = c(build_col,cols1[n])
+        build_pch = c(build_pch,shapes[o])
+      }
+    }
   }
+  
+  legend("bottomleft",
+         legend = build_legend,
+         # legend=c("Adult female", "Adult male", "Pup female", "Pup male"),
+         pch= build_pch, col=build_col, 
+         cex=1.3)
 }
